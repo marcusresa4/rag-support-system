@@ -1,2 +1,23 @@
-**/.venv/
-.venv
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# Env
+.env
+
+# Data (too large for git)
+data/*.json
+data/*.parquet
+
+# IDE
+.vscode/
+.idea/
+
+# MLflow
+mlruns/
