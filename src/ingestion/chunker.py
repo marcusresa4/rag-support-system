@@ -1,10 +1,6 @@
 import nltk
 import numpy as np
 from dataclasses import dataclass
-from sentence_transformers import SentenceTransformer
-
-nltk.download("punkt", quiet=True)
-nltk.download("punkt_tab", quiet=True)
 
 @dataclass
 class Chunk:
@@ -21,10 +17,16 @@ def fixed_size_chunks(
     chunk_size: int = 512,
     overlap: int = 51,
 ) -> list[Chunk]:
+    if overlap >= chunk_size:
+        raise ValueError(
+            f"overlap ({overlap}) must be smaller than chunk_size ({chunk_size})"
+        )
+
     words = text.split()
     chunks = []
     start = 0
     idx = 0
+    step = chunk_size - overlap
 
     while start < len(words):
         end = start + chunk_size
@@ -35,10 +37,11 @@ def fixed_size_chunks(
             strategy="fixed",
             token_count=len(chunk_words),
         ))
-        start += chunk_size - overlap
+        start += step
         idx += 1
 
     return chunks
+
 
 def sentence_chunks(
     text: str,
@@ -83,6 +86,8 @@ def semantic_chunks(
     model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
     breakpoint_percentile: int = 90,
 ) -> list[Chunk]:
+    from sentence_transformers import SentenceTransformer  # lazy import
+
     sentences = nltk.sent_tokenize(text)
     if len(sentences) < 2:
         return [Chunk(content=text, chunk_index=0, strategy="semantic", token_count=_rough_token_count(text))]
