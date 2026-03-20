@@ -41,3 +41,31 @@ async def bulk_index_chunks(chunks: list[dict]):
         actions.append(doc)
     if actions:
         await es.bulk(body=actions)
+
+async def bm25_search(query: str, k: int = 5) -> list[dict]:
+    response = await es.search(
+        index=INDEX_NAME,
+        body={
+            "query": {
+                "multi_match": {
+                    "query": query,
+                    "fields": ["content^2", "title"],
+                    "type": "best_fields",
+                }
+            },
+            "size": k,
+        }
+    )
+
+    results = []
+    for hit in response["hits"]["hits"]:
+        results.append({
+            "arxiv_id": hit["_source"]["arxiv_id"],
+            "chunk_index": hit["_source"]["chunk_index"],
+            "content": hit["_source"]["content"],
+            "title": hit["_source"]["title"],
+            "score": hit["_score"],
+            "strategy": "bm25",
+        })
+
+    return results
