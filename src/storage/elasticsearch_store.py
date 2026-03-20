@@ -42,20 +42,42 @@ async def bulk_index_chunks(chunks: list[dict]):
     if actions:
         await es.bulk(body=actions)
 
-async def bm25_search(query: str, k: int = 5) -> list[dict]:
-    response = await es.search(
-        index=INDEX_NAME,
-        body={
-            "query": {
-                "multi_match": {
-                    "query": query,
-                    "fields": ["content^2", "title"],
-                    "type": "best_fields",
-                }
-            },
-            "size": k,
-        }
-    )
+async def bm25_search(
+    query: str,
+    k: int = 5,
+    arxiv_id: str = None,
+    date_from: str = None,
+    date_to: str = None,
+) -> list[dict]:
+    filters = []
+
+    if arxiv_id:
+        filters.append({"term": {"arxiv_id": arxiv_id}})
+    if date_from or date_to:
+        date_range = {}
+        if date_from:
+            date_range["gte"] = date_from
+        if date_to:
+            date_range["lte"] = date_to
+        filters.append({"range": {"published_date": date_range}})
+
+    query_body = {
+        "query": {
+            "bool": {
+                "must": {
+                    "multi_match": {
+                        "query": query,
+                        "fields": ["content^2", "title"],
+                        "type": "best_fields",
+                    }
+                },
+                "filter": filters,
+            }
+        },
+        "size": k,
+    }
+
+    response = await es.search(index=INDEX_NAME, body=query_body)
 
     results = []
     for hit in response["hits"]["hits"]:
