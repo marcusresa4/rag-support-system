@@ -45,3 +45,33 @@ async def insert_chunks(chunks: list[dict]):
             obj = DocumentChunk(**chunk)
             session.add(obj)
         await session.commit()
+
+async def dense_search(query_embedding: list[float], k: int = 5) -> list[dict]:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            text("""
+                SELECT
+                    arxiv_id,
+                    chunk_index,
+                    content,
+                    title,
+                    1 - (embedding <=> CAST(:embedding AS vector)) AS score
+                FROM document_chunks
+                ORDER BY embedding <=> CAST(:embedding AS vector)
+                LIMIT :k
+            """),
+            {"embedding": str(query_embedding), "k": k}
+        )
+        rows = result.fetchall()
+
+    return [
+        {
+            "arxiv_id": row.arxiv_id,
+            "chunk_index": row.chunk_index,
+            "content": row.content,
+            "title": row.title,
+            "score": float(row.score),
+            "strategy": "dense",
+        }
+        for row in rows
+    ]
