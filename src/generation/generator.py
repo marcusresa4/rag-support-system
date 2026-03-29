@@ -81,3 +81,45 @@ def generate_answer_stream(query: str, chunks: list[dict]) -> Generator[str, Non
     ) as stream:
         for text in stream.text_stream:
             yield text
+            
+def check_hallucination(answer: str, chunks: list[dict]) -> dict:
+    """
+    Simple hallucination check — verifies the answer is grounded
+    in the retrieved chunks using embedding similarity.
+    """
+    from src.embeddings.embedder import embed_texts
+    import numpy as np
+
+    # Split answer into sentences
+    import nltk
+    sentences = nltk.sent_tokenize(answer)
+    if not sentences:
+        return {"hallucination_risk": "low", "grounded_ratio": 1.0}
+
+    # Embed all sentences and all chunks
+    chunk_texts = [c["content"] for c in chunks]
+    all_texts = sentences + chunk_texts
+    all_embeddings = embed_texts(all_texts)
+
+    sentence_embeddings = all_embeddings[:len(sentences)]
+    chunk_embeddings = all_embeddings[len(sentences):]
+
+    # For each sentence, find max similarity to any chunk
+    grounded = 0
+    for sent_emb in sentence_embeddings:
+        max_sim = max(
+            float(np.dot(sent_emb, chunk_emb))
+            for chunk_emb in chunk_embeddings
+        )
+        if max_sim > 0.5:  # threshold — tune this in Phase 4
+            grounded += 1
+
+    grounded_ratio = grounded / len(sentences)
+    risk = "low" if grounded_ratio > 0.7 else "medium" if grounded_ratio > 0.4 else "high"
+
+    return {
+        "hallucination_risk": risk,
+        "grounded_ratio": round(grounded_ratio, 2),
+        "sentences_checked": len(sentences),
+        "sentences_grounded": grounded,
+    }
