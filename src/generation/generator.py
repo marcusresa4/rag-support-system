@@ -3,6 +3,7 @@ import os
 import anthropic
 from dotenv import load_dotenv
 import re
+from typing import Generator
 
 load_dotenv()
 
@@ -67,3 +68,16 @@ def inject_citations(answer: str, chunks: list[dict]) -> dict:
         "cited_sources": cited_sources,
         "total_sources_used": len(cited_sources),
     }
+    
+def generate_answer_stream(query: str, chunks: list[dict]) -> Generator[str, None, None]:
+    """Streams the answer token by token."""
+    prompt = build_prompt(query, chunks)
+
+    with client.messages.stream(
+        model="claude-sonnet-4-6",
+        max_tokens=1000,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": prompt}]
+    ) as stream:
+        for text in stream.text_stream:
+            yield text
