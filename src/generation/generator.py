@@ -123,3 +123,25 @@ def check_hallucination(answer: str, chunks: list[dict]) -> dict:
         "sentences_checked": len(sentences),
         "sentences_grounded": grounded,
     }
+    
+def compute_confidence(chunks: list[dict], hallucination_result: dict) -> float:
+    """
+    Confidence score based on:
+    - Average retrieval score of the chunks (normalized to 0-1)
+    - Hallucination grounded ratio
+    """
+    if not chunks:
+        return 0.0
+
+    retrieval_scores = [c["score"] for c in chunks]
+    avg_retrieval = sum(retrieval_scores) / len(retrieval_scores)
+    max_retrieval = max(retrieval_scores)
+
+    # Normalize relative to the best score in this result set
+    normalized_retrieval = avg_retrieval / max_retrieval if max_retrieval > 0 else 0.0
+
+    # Combine retrieval quality + grounded ratio (equal weight)
+    grounded_ratio = hallucination_result.get("grounded_ratio", 0.5)
+    confidence = (normalized_retrieval + grounded_ratio) / 2
+
+    return round(confidence, 2)
