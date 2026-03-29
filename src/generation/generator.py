@@ -2,6 +2,7 @@
 import os
 import anthropic
 from dotenv import load_dotenv
+import re
 
 load_dotenv()
 
@@ -40,3 +41,29 @@ def generate_answer(query: str, chunks: list[dict]) -> str:
     )
 
     return message.content[0].text
+
+def inject_citations(answer: str, chunks: list[dict]) -> dict:
+    """
+    Finds all [Source N] references in the answer and maps them
+    back to the actual paper metadata.
+    """
+    # Find all [Source N] references in the answer
+    source_refs = re.findall(r'\[Source (\d+)\]', answer)
+    source_refs = list(set(int(n) for n in source_refs))  # deduplicate
+
+    cited_sources = []
+    for n in sorted(source_refs):
+        idx = n - 1  # [Source 1] → index 0
+        if idx < len(chunks):
+            cited_sources.append({
+                "source_number": n,
+                "arxiv_id": chunks[idx]["arxiv_id"],
+                "title": chunks[idx]["title"],
+                "chunk_index": chunks[idx]["chunk_index"],
+            })
+
+    return {
+        "answer": answer,
+        "cited_sources": cited_sources,
+        "total_sources_used": len(cited_sources),
+    }
