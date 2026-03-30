@@ -1,0 +1,76 @@
+{
+  "version": "1.0",
+  "description": "Golden dataset for RAG system evaluation",
+  "questions": [
+    {
+      "id": "q001",
+      "question": "What architecture does the Transformer model use instead of recurrence?",
+      "ground_truth": "The Transformer model relies entirely on attention mechanisms, dispensing with recurrence and convolutions entirely.",
+      "arxiv_ids": ["1706.03762"],
+      "type": "factual"
+    },
+    {
+      "id": "q002",
+      "question": "What is the main contribution of the BERT model?",
+      "ground_truth": "BERT introduces deep bidirectional representations by jointly conditioning on both left and right context in all layers, using masked language modeling and next sentence prediction.",
+      "arxiv_ids": ["1810.04805"],
+      "type": "factual"
+    },
+    {
+      "id": "q003",
+      "question": "How does RAG combine retrieval with generation?",
+      "ground_truth": "RAG combines a parametric memory (the LLM) with a non-parametric memory (a dense vector index of documents). It retrieves relevant documents and uses them as context for generation.",
+      "arxiv_ids": ["2005.11401"],
+      "type": "factual"
+    },
+    {
+      "id": "q004",
+      "question": "What training method does InstructGPT use to align language models?",
+      "ground_truth": "InstructGPT uses reinforcement learning from human feedback (RLHF), fine-tuning GPT-3 with human preferences to make it more helpful, harmless and honest.",
+      "arxiv_ids": ["2203.02155"],
+      "type": "factual"
+    },
+    {
+      "id": "q005",
+      "question": "What is the difference between encoder and decoder in the Transformer?",
+      "ground_truth": "The encoder maps input sequences to continuous representations. The decoder generates output sequences one element at a time, using attention over the encoder output.",
+      "arxiv_ids": ["1706.03762"],
+      "type": "factual"
+    },
+    {
+      "id": "q006",
+      "question": "What is the capital of France?",
+      "ground_truth": "This question cannot be answered from the provided scientific literature.",
+      "arxiv_ids": [],
+      "type": "unanswerable"
+    },
+    {
+      "id": "q007",
+      "question": "How does attention mechanism relate to retrieval augmented generation?",
+      "ground_truth": "Attention mechanisms in transformers and RAG both solve the problem of focusing on relevant information. Transformers use attention to focus on relevant input tokens, while RAG retrieves relevant documents to provide context for generation.",
+      "arxiv_ids": ["1706.03762", "2005.11401"],
+      "type": "multi_hop"
+    },
+    {
+      "id": "q008",
+      "question": "What datasets were used to train BERT?",
+      "ground_truth": "BERT was trained on BooksCorpus and English Wikipedia, totaling approximately 3.3 billion words.",
+      "arxiv_ids": ["1810.04805"],
+      "type": "factual"
+    },
+    {
+      "id": "q009",
+      "question": "How does InstructGPT compare to GPT-3 in human evaluations?",
+      "ground_truth": "InstructGPT outputs are preferred over GPT-3 outputs by human labelers, with the 1.3B InstructGPT model outputs being preferred over the 175B GPT-3 outputs despite being 100x smaller.",
+      "arxiv_ids": ["2203.02155"],
+      "type": "factual"
+    },
+    {
+      "id": "q010",
+      "question": "What is the role of the feed-forward network in the Transformer?",
+      "ground_truth": "Each layer of the Transformer contains a feed-forward network applied position-wise, consisting of two linear transformations with a ReLU activation in between.",
+      "arxiv_ids": ["1706.03762"],
+      "type": "factual"
+    }
+  ]
+}
