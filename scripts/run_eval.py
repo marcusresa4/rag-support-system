@@ -1,5 +1,6 @@
 import asyncio
 import json
+import math
 import os
 import sys
 from datetime import datetime
@@ -81,18 +82,21 @@ async def main():
 
     # Build report
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    valid_judge = [r for r in results if "judge" in r]
+    valid_faith = [r for r in results if "ragas" in r and not math.isnan(r["ragas"]["faithfulness"])]
+
     report = {
         "timestamp": timestamp,
         "total_questions": len(results),
         "results": results,
         "summary": {
             "avg_judge_score": round(
-                sum(r["judge"]["average"] for r in results if "judge" in r)
-                / len([r for r in results if "judge" in r]), 2
+                sum(r["judge"]["average"] for r in valid_judge) / len(valid_judge), 2
             ),
             "avg_faithfulness": round(
-                sum(r["ragas"]["faithfulness"] for r in results if "ragas" in r and not __import__("math").isnan(r["ragas"]["faithfulness"])) / len([r for r in results if "ragas" in r and not __import__("math").isnan(r["ragas"]["faithfulness"])]), 2
-),
+                sum(r["ragas"]["faithfulness"] for r in valid_faith) / len(valid_faith), 2
+            ),
         }
     }
 
@@ -104,13 +108,13 @@ async def main():
     # Save markdown report
     md_path = f"evals/eval_report_{timestamp}.md"
     with open(md_path, "w") as f:
-        f.write(f"# Evaluation Report\n")
+        f.write("# Evaluation Report\n")
         f.write(f"**Date:** {timestamp}\n\n")
         f.write(f"**Questions evaluated:** {len(results)}\n\n")
-        f.write(f"## Summary\n")
+        f.write("## Summary\n")
         f.write(f"- Average judge score: {report['summary']['avg_judge_score']}/5\n")
         f.write(f"- Average faithfulness: {report['summary']['avg_faithfulness']}\n\n")
-        f.write(f"## Results\n\n")
+        f.write("## Results\n\n")
         for r in results:
             f.write(f"### [{r['id']}] {r['question']}\n")
             f.write(f"**Type:** {r['type']}\n\n")
@@ -130,6 +134,36 @@ async def main():
     print(f"\nSummary:")
     print(f"  Average judge score: {report['summary']['avg_judge_score']}/5")
     print(f"  Average faithfulness: {report['summary']['avg_faithfulness']}")
+
+    # Quality gate
+    print("\n🔍 Quality Gate Check:")
+    failed = False
+
+    if report["summary"]["avg_faithfulness"] < 0.8:
+        print(f"  ❌ FAILED: avg faithfulness {report['summary']['avg_faithfulness']} < 0.8 threshold")
+        failed = True
+    else:
+        print(f"  ✅ PASSED: avg faithfulness {report['summary']['avg_faithfulness']} >= 0.8")
+
+    if report["summary"]["avg_judge_score"] < 3.0:
+        print(f"  ❌ FAILED: avg judge score {report['summary']['avg_judge_score']} < 3.0 threshold")
+        failed = True
+    else:
+        print(f"  ✅ PASSED: avg judge score {report['summary']['avg_judge_score']} >= 3.0")
+
+    report["quality_gate"] = {
+        "passed": not failed,
+        "thresholds": {
+            "faithfulness": 0.8,
+            "judge_score": 3.0,
+        }
+    }
+
+    if failed:
+        print("\n⚠️  Quality gate FAILED — review results before deploying")
+        sys.exit(1)
+    else:
+        print("\n✅ Quality gate PASSED")
 
 
 if __name__ == "__main__":
