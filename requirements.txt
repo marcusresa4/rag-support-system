@@ -2,7 +2,7 @@
 fastapi==0.111.0
 uvicorn[standard]==0.30.1
 python-dotenv==1.0.1
-pydantic-settings==2.3.0
+pydantic-settings==2.4.0
 
 # Ingestion
 arxiv==2.1.0
@@ -19,12 +19,17 @@ sqlalchemy==2.0.31
 elasticsearch==8.14.0
 
 # LLM
-anthropic==0.29.0
+anthropic==0.39.0
 langchain==0.2.6
 langchain-community==0.2.6
+langchain-anthropic==0.1.22
+langchain-huggingface==0.0.3
+langchain-core==0.2.43
+langchain-text-splitters==0.2.4
 
 # Eval (Phase 4 — install now, use later)
 ragas==0.1.14
+datasets==2.19.0
 mlflow==2.14.0
 
 # Dev
