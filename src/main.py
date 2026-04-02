@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
-from src.api.routes import health, ingest, search, ask
+from src.api.routes import health, ingest, search, ask, ab_test
 from src.storage.pgvector_store import init_db
 from src.storage.elasticsearch_store import ensure_index
 import structlog
@@ -46,3 +46,4 @@ app.include_router(health.router)
 app.include_router(ingest.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(ask.router, prefix="/api/v1")
+app.include_router(ab_test.router, prefix="/api/v1")
