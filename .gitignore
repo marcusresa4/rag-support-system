@@ -24,3 +24,7 @@ mlruns/
 
 # OS
 .DS_Store
+
+# Eval reports
+evals/eval_report_*.json
+evals/eval_report_*.md
