@@ -21,6 +21,7 @@ data/*.parquet
 
 # MLflow
 mlruns/
+mlflow.db
 
 # OS
 .DS_Store
