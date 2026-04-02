@@ -4,6 +4,7 @@ import math
 import os
 import sys
 from datetime import datetime
+import mlflow
 
 sys.path.insert(0, os.path.abspath("."))
 
@@ -164,6 +165,33 @@ async def main():
         sys.exit(1)
     else:
         print("\n✅ Quality gate PASSED")
+        
+        
+    # Log to MLflow
+    mlflow.set_experiment("rag-eval")
+
+    with mlflow.start_run(run_name=f"eval_{timestamp}"):
+        mlflow.log_metric("avg_judge_score", report["summary"]["avg_judge_score"])
+        mlflow.log_metric("avg_faithfulness", report["summary"]["avg_faithfulness"])
+        mlflow.log_metric("quality_gate_passed", int(not failed))
+        mlflow.log_metric("total_questions", len(results))
+
+        for r in results:
+            if "judge" in r:
+                mlflow.log_metric(f"{r['id']}_judge_avg", r["judge"]["average"])
+            if "ragas" in r and not math.isnan(r["ragas"]["faithfulness"]):
+                mlflow.log_metric(f"{r['id']}_faithfulness", r["ragas"]["faithfulness"])
+
+        mlflow.log_param("golden_dataset_size", len(results))
+        mlflow.log_param("retrieval_strategy", "hybrid")
+        mlflow.log_param("llm_model", "claude-sonnet-4-6")
+        mlflow.log_param("judge_model", "claude-haiku-4-5-20251001")
+        mlflow.log_param("quality_gate_passed", not failed)
+
+        mlflow.log_artifact(json_path)
+        mlflow.log_artifact(md_path)
+
+        print(f"\n📊 MLflow run logged — view at http://localhost:5000")
 
 
 if __name__ == "__main__":
