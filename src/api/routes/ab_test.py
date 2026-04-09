@@ -33,6 +33,8 @@ async def ab_search(
     else:
         results = await hybrid_search_with_expansion(q, k=k)
         strategy = "hybrid_expanded"
+        
+    avg_score = sum(r.get("score", 0) for r in results) / len(results) if results else 0
 
     logger.info(
         "ab_test_request",
@@ -40,6 +42,7 @@ async def ab_search(
         variant=variant,
         strategy=strategy,
         results_count=len(results),
+        avg_retrieval_score=round(avg_score, 4)
     )
 
     return {
